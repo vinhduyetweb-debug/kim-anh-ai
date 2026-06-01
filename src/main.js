@@ -14,6 +14,7 @@ import { startListening } from "./voiceIntentEngine.js";
 const app = document.querySelector("#app");
 let parentTapCount = 0;
 let parentTapTimer;
+let deferredInstallPrompt = null;
 
 function navigate(route) {
   window.location.hash = route;
@@ -546,12 +547,21 @@ function renderParentMode() {
           </div>
         </section>
 
+        <section class="parent-card install-card">
+          <h2>PWA Install</h2>
+          <p class="parent-note" data-install-help>${getInstallHelpText()}</p>
+          <button class="small-action install-action" type="button" data-install-app ${deferredInstallPrompt ? "" : "disabled"}>
+            Cài Kim Anh AI lên màn hình chính
+          </button>
+        </section>
+
         <button class="save-button" type="submit">Lưu cài đặt</button>
       </form>
     </main>
   `;
 
   app.querySelector("[data-back]").addEventListener("click", () => navigate("/"));
+  bindInstallControls();
   app.querySelector("[data-add-star]").addEventListener("click", () => {
     addStar();
     renderParentMode();
@@ -835,6 +845,43 @@ function splitLines(value) {
     .filter(Boolean);
 }
 
+function bindInstallControls() {
+  const installButton = app.querySelector("[data-install-app]");
+  const installHelp = app.querySelector("[data-install-help]");
+
+  if (!installButton || !installHelp) {
+    return;
+  }
+
+  installButton.addEventListener("click", async () => {
+    if (!deferredInstallPrompt) {
+      installHelp.textContent = getInstallHelpText();
+      return;
+    }
+
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice.catch(() => null);
+    deferredInstallPrompt = null;
+    renderParentMode();
+  });
+}
+
+function getInstallHelpText() {
+  if (isStandaloneApp()) {
+    return "Kim Anh AI đã chạy như ứng dụng trên màn hình chính.";
+  }
+
+  if (deferredInstallPrompt) {
+    return "Có thể cài Kim Anh AI lên màn hình chính của Android.";
+  }
+
+  return "Nếu nút cài chưa bật, vào menu trình duyệt → Thêm vào màn hình chính.";
+}
+
+function isStandaloneApp() {
+  return window.matchMedia?.("(display-mode: standalone)").matches || navigator.standalone;
+}
+
 function escapeHtml(value) {
   return String(value)
     .replaceAll("&", "&amp;")
@@ -845,6 +892,19 @@ function escapeHtml(value) {
 }
 
 window.addEventListener("hashchange", render);
+
+window.addEventListener("beforeinstallprompt", (event) => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+
+  if (currentRoute() === "/parent") {
+    renderParentMode();
+  }
+});
+
+window.addEventListener("appinstalled", () => {
+  deferredInstallPrompt = null;
+});
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {

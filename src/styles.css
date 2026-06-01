@@ -1182,6 +1182,19 @@ p {
   cursor: pointer;
 }
 
+.small-action:disabled {
+  cursor: default;
+  opacity: 0.62;
+}
+
+.install-card {
+  align-content: start;
+}
+
+.install-action {
+  justify-self: start;
+}
+
 .memory-admin-list {
   display: grid;
   gap: 8px;

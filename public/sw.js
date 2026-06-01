@@ -1,9 +1,15 @@
-const CACHE_NAME = "kim-anh-ai-rainbow-house-v10";
+const CACHE_NAME = "kim-anh-ai-rainbow-house-v11";
+const OFFLINE_URL = "/offline.html";
 const APP_SHELL = [
   "/",
   "/index.html",
+  OFFLINE_URL,
   "/manifest.webmanifest",
   "/icons/icon.svg",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png",
+  "/icons/maskable-512.png",
+  "/icons/apple-touch-icon.png",
   "/apps/kimanh-bridge.css",
   "/apps/kimanh-bridge.js",
   "/apps/kimanh-memory.css",
@@ -58,6 +64,10 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  if (event.request.headers.has("range")) {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) {
@@ -66,11 +76,41 @@ self.addEventListener("fetch", (event) => {
 
       return fetch(event.request)
         .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          if (shouldCache(event.request, response)) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
           return response;
         })
-        .catch(() => caches.match("/index.html"));
+        .catch(() => {
+          if (event.request.mode === "navigate") {
+            return caches.match("/").then((cached) => cached || caches.match(OFFLINE_URL));
+          }
+
+          if (event.request.destination === "document") {
+            return caches.match(OFFLINE_URL);
+          }
+
+          return caches.match(OFFLINE_URL);
+        });
     })
   );
 });
+
+function shouldCache(request, response) {
+  if (!response || !response.ok) {
+    return false;
+  }
+
+  const url = new URL(request.url);
+
+  if (url.origin !== self.location.origin) {
+    return false;
+  }
+
+  if (/\.(mp4|mov|webm|m4v|mp3|wav|ogg|m4a)$/i.test(url.pathname)) {
+    return false;
+  }
+
+  return true;
+}
