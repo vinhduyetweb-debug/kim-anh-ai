@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#05070d" />
+  <title>VinhVideo Offline</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css?v=1" />
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <button id="menuBtn" class="pill">☰ Thư viện</button>
+      <div class="brand">VINHVIDEO</div>
+      <button id="muteBtn" class="pill">🔇</button>
+    </header>
+    <section id="empty" class="empty">
+      <div class="logo">▶</div>
+      <h1>VinhVideo Offline</h1>
+      <p>Chọn video từ điện thoại, lưu offline và xem kiểu TikTok.</p>
+      <button id="emptyAddBtn" class="primary">+ Thêm video</button>
+      <small>Sau khi thêm video, lần sau có thể xem lại không cần internet.</small>
+    </section>
+    <section id="feed" class="feed"></section>
+    <aside id="drawer" class="drawer">
+      <div class="panel">
+        <div class="panelHead">
+          <div><h2>Thư viện video</h2><p id="storageInfo">Đang tải...</p></div>
+          <button id="closeBtn" class="iconBtn">×</button>
+        </div>
+        <div class="actionsRow">
+          <label class="blockBtn primary">+ Chọn video<input id="fileInput" hidden type="file" accept="video/*" multiple /></label>
+          <label class="blockBtn">+ Chọn thư mục<input id="folderInput" hidden type="file" accept="video/*" webkitdirectory multiple /></label>
+        </div>
+        <div class="hint">Video được lưu trong trình duyệt bằng IndexedDB. iPhone/iPad có thể giới hạn dung lượng nếu video quá nặng.</div>
+        <div class="filterRow">
+          <button id="allBtn" class="small active">Tất cả</button>
+          <button id="favBtn" class="small">Yêu thích</button>
+          <button id="exportBtn" class="small">Export list</button>
+        </div>
+        <div id="libraryList" class="libraryList"></div>
+        <button id="clearBtn" class="danger full">Xóa toàn bộ video offline</button>
+      </div>
+    </aside>
+  </main>
+  <script src="app.js?v=1"></script>
+</body>
+</html>

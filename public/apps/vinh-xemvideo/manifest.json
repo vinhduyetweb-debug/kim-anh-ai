@@ -1,0 +1,10 @@
+{
+  "name": "VinhVideo Offline TikTok",
+  "short_name": "VinhVideo",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#05070d",
+  "theme_color": "#05070d",
+  "orientation": "portrait",
+  "icons": []
+}

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Wonder ABC Universe icon">
+  <rect width="512" height="512" rx="112" fill="#705dff"/>
+  <circle cx="132" cy="110" r="92" fill="#ffc4dc" opacity=".9"/>
+  <circle cx="410" cy="402" r="108" fill="#8de7ff" opacity=".85"/>
+  <text x="256" y="248" text-anchor="middle" font-family="Arial, sans-serif" font-size="132" font-weight="900" fill="#ffffff">ABC</text>
+  <text x="256" y="356" text-anchor="middle" font-family="Arial, sans-serif" font-size="82" font-weight="900" fill="#fff36d">123</text>
+</svg>

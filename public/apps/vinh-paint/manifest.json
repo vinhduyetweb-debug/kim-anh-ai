@@ -1,0 +1,9 @@
+{
+  "name": "Bé Tô Màu Họa Sĩ Nhí V3",
+  "short_name": "Tô Màu",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#fff4cc",
+  "theme_color": "#fff4cc",
+  "orientation": "portrait"
+}

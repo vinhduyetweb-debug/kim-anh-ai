@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Wonder ABC Universe là mini app học chữ cái tiếng Anh A-Z và số đếm 1-100 cho trẻ em với giọng đọc, tiến độ học và giao diện vui nhộn.">
+<meta name="theme-color" content="#705dff">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Wonder ABC Universe - Học chữ cái và số đếm cho trẻ em">
+<meta property="og:description" content="Mini app giáo dục tĩnh giúp trẻ học chữ cái tiếng Anh A-Z và số đếm 1-100.">
+<meta property="og:site_name" content="Wonder ABC Universe">
+<meta property="og:locale" content="vi_VN">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Wonder ABC Universe">
+<meta name="twitter:description" content="Mini app học chữ cái tiếng Anh A-Z và số đếm 1-100 cho trẻ em.">
+<title>Wonder ABC Universe | Học ABC và số đếm cho trẻ em</title>
+<link rel="manifest" href="./assets/manifest-DA3jYvXZ.json">
+<link rel="icon" href="./assets/app-icon-JTzbsX6F.svg" type="image/svg+xml">
+  <script type="module" crossorigin src="./assets/index-z_IRj-F1.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-sFzEZ3gn.css">
+</head>
+
+<body>
+<div class="app">
+<header class="appHeader">
+<div class="brand">
+<div class="logo" aria-hidden="true">🌈</div>
+<div>
+<h1>Wonder ABC Universe</h1>
+<p>Smart Number Learning</p>
+</div>
+</div>
+
+<div class="statusPanel">
+<div class="score" role="status" aria-live="polite" aria-label="Score">
+✨ <span id="score">0</span>
+</div>
+<div class="progressSummary" role="status" aria-live="polite">
+<span id="modeLabel">Choose Mode</span>
+<span id="progressText">0 / 0</span>
+<span id="percentText">0%</span>
+</div>
+<button id="resetScoreBtn" class="resetBtn" type="button" aria-label="Reset score">
+Reset Score
+</button>
+</div>
+</header>
+
+<main>
+<section id="modeSelect" class="card modeCard" aria-labelledby="modeTitle">
+<h2 id="modeTitle">Choose Learning Mode</h2>
+<div class="modeButtons">
+<button id="lettersMode" class="modeBtn" type="button" aria-label="Start letter learning mode">
+<span aria-hidden="true">🔤</span>
+<span>26 Letters</span>
+</button>
+<button id="numbersMode" class="modeBtn" type="button" aria-label="Start number learning mode">
+<span aria-hidden="true">🔢</span>
+<span>100 Numbers</span>
+</button>
+</div>
+</section>
+
+<section id="lessonCard" class="card lessonCard hidden" aria-labelledby="lessonTitle">
+<div class="lessonTopline">
+<div class="worldTag">🌈 Emotional Chibi Learning</div>
+<div id="lessonMeta" class="lessonMeta">Lesson 0 of 0</div>
+</div>
+
+<div class="progressTrack" aria-label="Learning progress">
+<div id="progressBar" class="progressBar"></div>
+</div>
+
+<div class="lessonBox pulse" id="lessonBox" tabindex="-1" aria-live="polite" aria-atomic="true">
+<div class="emoji" id="emoji"></div>
+<h2 class="letter" id="letter"></h2>
+<div class="word" id="word"></div>
+<div class="meaning" id="meaning"></div>
+<div class="sentence" id="sentence"></div>
+<div class="visualCount" id="visualCount"></div>
+</div>
+
+<div id="completionMessage" class="completionMessage hidden" tabindex="-1" role="status" aria-live="polite">
+🎉 Great job! You reached the end of this learning path.
+</div>
+
+<div class="buttons" aria-label="Speech controls">
+<button id="letterBtn" type="button" aria-label="Speak the current letter or number">
+🔤 Letter
+</button>
+<button id="englishBtn" type="button" aria-label="Speak the English word">
+🇺🇸 English
+</button>
+<button id="vietnameseBtn" type="button" aria-label="Speak the Vietnamese meaning and sentence">
+🇻🇳 Tiếng Việt
+</button>
+</div>
+
+<div class="nav" aria-label="Lesson navigation">
+<button id="prevBtn" type="button" aria-label="Go to the previous lesson">
+⬅ Back
+</button>
+<button id="nextBtn" type="button" aria-label="Choose the next lesson">
+🎲 Smart Random
+</button>
+</div>
+</section>
+</main>
+</div>
+
+</body>
+</html>
