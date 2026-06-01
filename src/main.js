@@ -3,6 +3,7 @@ import { getCharacterAnimationClass, getCharacterEmoji, getCharacterMessage, get
 import { getEncouragement, getGreeting, getSuggestion } from "./companionEngine.js";
 import { getMusic, getStories, getVideos, getVoices } from "./contentRegistry.js";
 import { memoryBox, rooms } from "./data/rooms.js";
+import { recordDrawingMemory, recordLearningMemory, recordVideoMemory, recordVoiceMemory } from "./memoryActions.js";
 import { getCurrentRoutine, getRoutineMessage } from "./routineEngine.js";
 import { loadParentSettings, saveParentSettings } from "./services/storage.js";
 import { addMemory, getMemories, removeMemory } from "./stores/memoryStore.js";
@@ -31,7 +32,7 @@ function render() {
   }
 
   if (route === "/memory") {
-    renderRoomPage(memoryBox);
+    renderMemoryBoxPage();
     return;
   }
 
@@ -68,6 +69,7 @@ function renderHome() {
     encouragement: getEncouragement(),
     suggestion: getSuggestion()
   };
+  const latestMemory = getMemories()[0];
   const houseRooms = rooms.filter((room) => room.id !== "voice");
 
   app.innerHTML = `
@@ -106,7 +108,7 @@ function renderHome() {
       </section>
 
       <section class="memory-band" aria-label="Kho Báu Ký Ức">
-        ${roomCard(memoryBox, true, "memory-feature")}
+        ${memoryFeatureCard(latestMemory)}
       </section>
 
       <button class="my-anh-corner-button" type="button" data-my-anh-corner>🌟 Góc Của Mỹ Anh</button>
@@ -116,9 +118,31 @@ function renderHome() {
   app.querySelector(".kim-anh").addEventListener("click", handleHiddenParentEntry);
   bindVoiceButton();
   app.querySelector("[data-my-anh-corner]").addEventListener("click", () => navigate("/my-anh-corner"));
+  app.querySelector("[data-memory-open]").addEventListener("click", () => navigate("/memory"));
+  app.querySelector("[data-memory-add]").addEventListener("click", () => navigate("/memory"));
   app.querySelectorAll("[data-room]").forEach((button) => {
     button.addEventListener("click", () => openRoom(button.dataset.room));
   });
+}
+
+function memoryFeatureCard(latestMemory) {
+  return `
+    <article class="memory-feature-card">
+      <button class="memory-feature-main" type="button" data-memory-open>
+        <span class="memory-feature-emoji" aria-hidden="true">📦</span>
+        <span class="memory-feature-copy">
+          <strong>📦 Kho Báu Ký Ức</strong>
+          <small>Nơi cất giữ những kỷ niệm đẹp của Mỹ Anh ✨</small>
+          ${
+            latestMemory
+              ? `<em>Kỷ niệm mới nhất: ${escapeHtml(latestMemory.title)}</em>`
+              : `<em>Chưa có ký ức nào. Mình cùng tạo ký ức đầu tiên nha ✨</em>`
+          }
+        </span>
+      </button>
+      <button class="memory-quick-add" type="button" data-memory-add>✨ Thêm ký ức</button>
+    </article>
+  `;
 }
 
 function roomCard(room, wide = false, extraClass = "") {
@@ -221,6 +245,91 @@ function renderSleepRoom(room) {
   `;
 
   app.querySelector("[data-back]").addEventListener("click", () => navigate("/"));
+}
+
+function renderMemoryBoxPage(showCreatedToast = false) {
+  const memories = getMemories();
+  const groupedMemories = groupMemories(memories);
+
+  app.innerHTML = `
+    <main class="app-shell memory-page">
+      <button class="back-button" type="button" data-back>← Về nhà</button>
+      <section class="memory-page-hero">
+        <div class="memory-page-symbol" aria-hidden="true">📦</div>
+        <div>
+          <h1>📦 Kho Báu Ký Ức</h1>
+          <p>Những điều đáng nhớ của Mỹ Anh</p>
+        </div>
+      </section>
+
+      <section class="memory-add-card" aria-label="Thêm ký ức">
+        <h2>✨ Thêm ký ức</h2>
+        <form class="memory-add-form" data-memory-form>
+          <label>
+            Tên ký ức
+            <input name="title" type="text" placeholder="Ví dụ: Bức tranh cầu vồng" autocomplete="off" />
+          </label>
+          <label>
+            Loại ký ức
+            <select name="type">
+              <option value="drawing">Vẽ tranh</option>
+              <option value="learning">Học tập</option>
+              <option value="video">Video</option>
+              <option value="voice">Giọng nói</option>
+              <option value="story">Câu chuyện</option>
+              <option value="reward">Thành tích</option>
+            </select>
+          </label>
+          <button class="primary-action" type="submit">Thêm ký ức</button>
+        </form>
+        <div class="memory-quick-actions" aria-label="Tạo ký ức nhanh">
+          <button type="button" data-quick-memory="drawing">🎨 Tranh mới</button>
+          <button type="button" data-quick-memory="learning">🔤 Học điều mới</button>
+          <button type="button" data-quick-memory="video">🎬 Video vui</button>
+          <button type="button" data-quick-memory="voice">🎤 Lời nhắn</button>
+        </div>
+      </section>
+
+      <section class="memory-list-section" aria-label="Danh sách ký ức">
+        ${
+          memories.length
+            ? `<div class="memory-timeline">${memoryGroupsMarkup(groupedMemories)}</div>`
+            : `<p class="memory-empty">Chưa có ký ức nào. Mình cùng tạo ký ức đầu tiên nha ✨</p>`
+        }
+      </section>
+
+      <button class="secondary-memory-link" type="button" data-open-memory-module>Mở kho báu đầy đủ</button>
+    </main>
+  `;
+
+  app.querySelector("[data-back]").addEventListener("click", () => navigate("/"));
+  app.querySelector("[data-open-memory-module]").addEventListener("click", () => {
+    window.location.href = memoryBox.launchPath;
+  });
+  app.querySelector("[data-memory-form]").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const memory = {
+      type: form.get("type"),
+      title: form.get("title")
+    };
+
+    addMemory(memory);
+    renderMemoryBoxPage("memory");
+  });
+  app.querySelectorAll("[data-quick-memory]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const result = recordQuickMemory(button.dataset.quickMemory);
+
+      if (result) {
+        renderMemoryBoxPage("reward");
+      }
+    });
+  });
+
+  if (showCreatedToast) {
+    showMemoryToast(showCreatedToast === "reward");
+  }
 }
 
 function renderContentPage(type) {
@@ -396,10 +505,12 @@ function renderParentMode() {
           <label>
             Type
             <select name="memoryType">
-              <option value="art">Art</option>
+              <option value="drawing">Drawing</option>
               <option value="learning">Learning</option>
               <option value="video">Video</option>
-              <option value="family">Family</option>
+              <option value="voice">Voice</option>
+              <option value="story">Story</option>
+              <option value="reward">Reward</option>
             </select>
           </label>
           <label>
@@ -579,6 +690,42 @@ function memoryListItem(memory) {
   `;
 }
 
+function memoryTimelineItem(memory) {
+  return `
+    <article class="memory-timeline-item">
+      <span class="memory-type-icon" aria-hidden="true">${memoryIcon(memory.type)}</span>
+      <div>
+        <h2>${escapeHtml(memory.title)}</h2>
+        <p>${escapeHtml(formatMemoryDate(memory.createdAt))}</p>
+        ${memory.rewardStars ? `<span class="memory-reward-badge">⭐ +${memory.rewardStars}</span>` : ""}
+      </div>
+    </article>
+  `;
+}
+
+function memoryGroupsMarkup(groups) {
+  return [
+    memoryGroupMarkup("Today", groups.today),
+    memoryGroupMarkup("This Week", groups.thisWeek),
+    memoryGroupMarkup("Older", groups.older)
+  ].join("");
+}
+
+function memoryGroupMarkup(title, memories) {
+  if (!memories.length) {
+    return "";
+  }
+
+  return `
+    <section class="memory-group">
+      <h2>${title}</h2>
+      <div class="memory-group-list">
+        ${memories.map(memoryTimelineItem).join("")}
+      </div>
+    </section>
+  `;
+}
+
 function memoryAdminItem(memory) {
   return `
     <div class="memory-admin-item">
@@ -592,12 +739,79 @@ function memoryAdminItem(memory) {
 function memoryIcon(type) {
   const icons = {
     art: "🎨",
+    drawing: "🎨",
     family: "👨‍👩‍👧",
     learning: "🔤",
-    video: "🎬"
+    reward: "⭐",
+    star: "⭐",
+    story: "📖",
+    video: "🎬",
+    voice: "🎤"
   };
 
   return icons[type] || "📦";
+}
+
+function formatMemoryDate(value) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Kỷ niệm đáng nhớ";
+  }
+
+  return date.toLocaleDateString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric"
+  });
+}
+
+function groupMemories(memories, now = new Date()) {
+  const startToday = startOfDay(now).getTime();
+  const startWeek = new Date(startToday);
+  startWeek.setDate(startWeek.getDate() - 6);
+
+  return memories.reduce(
+    (groups, memory) => {
+      const timestamp = new Date(memory.createdAt).getTime();
+
+      if (!Number.isFinite(timestamp)) {
+        groups.older.push(memory);
+      } else if (timestamp >= startToday) {
+        groups.today.push(memory);
+      } else if (timestamp >= startWeek.getTime()) {
+        groups.thisWeek.push(memory);
+      } else {
+        groups.older.push(memory);
+      }
+
+      return groups;
+    },
+    { today: [], thisWeek: [], older: [] }
+  );
+}
+
+function startOfDay(date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function showMemoryToast(hasReward = false) {
+  const toast = document.createElement("div");
+  toast.className = "shell-memory-toast";
+  toast.textContent = hasReward ? "✨ Đã lưu vào Kho Báu Ký Ức và nhận 1 sao!" : "✨ Đã thêm vào Kho Báu Ký Ức";
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2200);
+}
+
+function recordQuickMemory(type) {
+  const actions = {
+    drawing: recordDrawingMemory,
+    learning: recordLearningMemory,
+    video: recordVideoMemory,
+    voice: recordVoiceMemory
+  };
+
+  return actions[type]?.();
 }
 
 function getVietnameseDayName(date) {

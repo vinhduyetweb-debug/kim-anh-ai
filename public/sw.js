@@ -1,4 +1,4 @@
-const CACHE_NAME = "kim-anh-ai-rainbow-house-v7";
+const CACHE_NAME = "kim-anh-ai-rainbow-house-v10";
 const APP_SHELL = [
   "/",
   "/index.html",
@@ -6,8 +6,11 @@ const APP_SHELL = [
   "/icons/icon.svg",
   "/apps/kimanh-bridge.css",
   "/apps/kimanh-bridge.js",
+  "/apps/kimanh-memory.css",
+  "/apps/kimanh-memory.js",
   "/apps/abcmyanh/",
   "/apps/abcmyanh/index.html",
+  "/apps/abcmyanh/kimanh-memory-hook.js",
   "/apps/abcmyanh/sw.js",
   "/apps/abcmyanh/assets/app-icon-JTzbsX6F.svg",
   "/apps/abcmyanh/assets/index-sFzEZ3gn.css",
@@ -16,6 +19,7 @@ const APP_SHELL = [
   "/apps/vinh-paint/",
   "/apps/vinh-paint/index.html",
   "/apps/vinh-paint/app.js",
+  "/apps/vinh-paint/kimanh-memory-hook.js",
   "/apps/vinh-paint/style.css",
   "/apps/vinh-paint/manifest.json",
   "/apps/vinh-paint/sw.js",
@@ -23,6 +27,7 @@ const APP_SHELL = [
   "/apps/vinh-xemvideo/",
   "/apps/vinh-xemvideo/index.html",
   "/apps/vinh-xemvideo/app.js",
+  "/apps/vinh-xemvideo/kimanh-memory-hook.js",
   "/apps/vinh-xemvideo/style.css",
   "/apps/vinh-xemvideo/manifest.json",
   "/apps/vinh-xemvideo/sw.js",

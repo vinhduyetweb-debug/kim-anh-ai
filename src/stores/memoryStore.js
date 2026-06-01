@@ -27,7 +27,9 @@ export function addMemory(memory) {
     id: memory?.id || crypto.randomUUID(),
     type: memory?.type || "memory",
     title: String(memory?.title || "").trim() || "Kỷ niệm mới",
-    createdAt: memory?.createdAt || new Date().toISOString()
+    createdAt: memory?.createdAt || new Date().toISOString(),
+    rewardStars: Math.max(0, Number(memory?.rewardStars) || 0),
+    rewardMessage: String(memory?.rewardMessage || "").trim()
   };
 
   saveMemories([nextMemory, ...memories]);
@@ -35,12 +37,14 @@ export function addMemory(memory) {
 }
 
 export function getMemories() {
-  const memories = readMemories();
+  const saved = localStorage.getItem(MEMORY_STORAGE_KEY);
 
-  if (memories.length === 0) {
+  if (!saved) {
     saveMemories(SAMPLE_MEMORIES);
     return sortNewestFirst(SAMPLE_MEMORIES);
   }
+
+  const memories = readMemories();
 
   return sortNewestFirst(memories);
 }
@@ -75,7 +79,9 @@ function normalizeMemory(memory) {
     id: memory?.id || crypto.randomUUID(),
     type: memory?.type || "memory",
     title: String(memory?.title || "Kỷ niệm").trim(),
-    createdAt: memory?.createdAt || new Date().toISOString()
+    createdAt: memory?.createdAt || new Date().toISOString(),
+    rewardStars: Math.max(0, Number(memory?.rewardStars) || 0),
+    rewardMessage: String(memory?.rewardMessage || "").trim()
   };
 }
 

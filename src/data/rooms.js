@@ -76,7 +76,7 @@ export const memoryBox = {
   emoji: "📦",
   name: "Kho Báu Ký Ức",
   module: "Vinh Kho Báu Ký Ức",
-  description: "Nơi lưu giữ những kỷ niệm đẹp.",
+  description: "Nơi cất giữ những kỷ niệm đẹp của Mỹ Anh ✨",
   kind: "launch",
   launchPath: "/apps/vinh-khobaukyuc/index.html",
   color: "peach"
