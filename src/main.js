@@ -1,4 +1,5 @@
 import "./styles.css";
+import { getCharacterAnimationClass, getCharacterEmoji, getCharacterMessage, getCharacterMood } from "./characterEngine.js";
 import { getEncouragement, getGreeting, getSuggestion } from "./companionEngine.js";
 import { getMusic, getStories, getVideos, getVoices } from "./contentRegistry.js";
 import { memoryBox, rooms } from "./data/rooms.js";
@@ -56,6 +57,12 @@ function render() {
 
 function renderHome() {
   const profile = getProfile();
+  const character = {
+    mood: getCharacterMood(),
+    emoji: getCharacterEmoji(),
+    message: getCharacterMessage(),
+    animationClass: getCharacterAnimationClass()
+  };
   const companion = {
     greeting: getGreeting(),
     encouragement: getEncouragement(),
@@ -70,15 +77,17 @@ function renderHome() {
           <span></span><span></span><span></span>
         </div>
         <div class="kim-hero-card">
-          <button class="kim-anh" type="button" aria-label="Kim Anh">
-            <span class="cat-face" aria-hidden="true">🐱</span>
+          <button class="kim-anh ${character.animationClass}" type="button" aria-label="Kim Anh" data-mood="${character.mood}">
+            <span class="cat-face" aria-hidden="true">${character.emoji}</span>
+            <span class="cat-blink" aria-hidden="true"></span>
             <span class="character-name">Kim Anh</span>
           </button>
           <div class="hero-copy">
             <p class="hero-kicker">🐱 Kim Anh</p>
             <h1 id="welcome-title">Xin chào ${escapeHtml(profile.name)} ✨</h1>
             <p>Hôm nay mình muốn chơi gì nào?</p>
-            <strong>${escapeHtml(companion.suggestion)}</strong>
+            <strong>${escapeHtml(character.message)}</strong>
+            <small>${escapeHtml(companion.suggestion)}</small>
           </div>
           <div class="voice-control home-voice">
             <button class="voice-button" type="button" data-voice-button>🎙️ Gọi Kim Anh</button>

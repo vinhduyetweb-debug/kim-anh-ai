@@ -114,27 +114,69 @@ button {
   position: relative;
   z-index: 1;
   display: grid;
-  width: 172px;
-  height: 172px;
+  width: 196px;
+  height: 196px;
   margin-top: 0;
   place-items: center;
   border: 0;
   border-radius: 50%;
   color: #58453a;
-  background: #ffd9a8;
-  box-shadow: 0 18px 34px rgba(122, 74, 48, 0.18);
+  background:
+    radial-gradient(circle at 50% 36%, rgba(255, 250, 224, 0.72), transparent 30%),
+    #ffd9a8;
+  box-shadow:
+    0 0 0 12px rgba(255, 255, 255, 0.38),
+    0 18px 34px rgba(122, 74, 48, 0.18);
   cursor: pointer;
+  animation: kim-float 4.8s ease-in-out infinite;
 }
 
 .cat-face {
-  font-size: 82px;
+  font-size: 88px;
   line-height: 1;
+  filter: drop-shadow(0 7px 9px rgba(112, 76, 48, 0.13));
+}
+
+.cat-blink {
+  position: absolute;
+  top: 78px;
+  left: 50%;
+  width: 78px;
+  height: 14px;
+  border-top: 4px solid rgba(91, 69, 55, 0.62);
+  border-bottom: 4px solid rgba(91, 69, 55, 0.62);
+  border-radius: 999px;
+  opacity: 0;
+  transform: translateX(-50%) scaleX(0.72);
+  animation: kim-blink 6.2s ease-in-out infinite;
 }
 
 .character-name {
-  margin-top: -24px;
+  margin-top: -28px;
   font-size: 1.08rem;
   font-weight: 900;
+}
+
+.kim-mood-cheerful {
+  box-shadow:
+    0 0 0 12px rgba(255, 255, 255, 0.38),
+    0 0 34px rgba(248, 213, 107, 0.48),
+    0 18px 34px rgba(122, 74, 48, 0.18);
+}
+
+.kim-mood-playful {
+  box-shadow:
+    0 0 0 12px rgba(255, 255, 255, 0.38),
+    0 0 34px rgba(245, 159, 183, 0.42),
+    0 18px 34px rgba(122, 74, 48, 0.18);
+}
+
+.kim-mood-gentle,
+.kim-mood-sleepy {
+  box-shadow:
+    0 0 0 12px rgba(255, 255, 255, 0.38),
+    0 0 34px rgba(153, 134, 205, 0.36),
+    0 18px 34px rgba(122, 74, 48, 0.18);
 }
 
 .hero-copy {
@@ -162,6 +204,14 @@ button {
   color: #6d4d42;
   background: rgba(255, 255, 255, 0.7);
   font-size: 0.98rem;
+}
+
+.hero-copy small {
+  max-width: min(100%, 28rem);
+  color: #786358;
+  font-size: 0.98rem;
+  font-weight: 850;
+  line-height: 1.35;
 }
 
 .hero-copy > p:not(.hero-kicker) {
@@ -515,7 +565,14 @@ p {
   background:
     linear-gradient(135deg, rgba(255, 245, 186, 0.58), rgba(255, 203, 180, 0.86)),
     #ffd7bd;
-  box-shadow: 0 18px 34px rgba(150, 91, 63, 0.18);
+  box-shadow:
+    0 0 0 6px rgba(255, 255, 255, 0.28),
+    0 18px 34px rgba(150, 91, 63, 0.18);
+}
+
+.room-card.memory-feature .room-emoji {
+  font-size: 3.2rem;
+  filter: drop-shadow(0 8px 10px rgba(129, 82, 49, 0.16));
 }
 
 .room-card:active {
@@ -556,6 +613,30 @@ p {
   box-shadow: 0 10px 20px rgba(93, 68, 50, 0.1);
   font-weight: 900;
   cursor: pointer;
+}
+
+@keyframes kim-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+@keyframes kim-blink {
+  0%,
+  88%,
+  100% {
+    opacity: 0;
+  }
+
+  90%,
+  93% {
+    opacity: 0.88;
+  }
 }
 
 .rose {

@@ -1,4 +1,4 @@
-const CACHE_NAME = "kim-anh-ai-rainbow-house-v6";
+const CACHE_NAME = "kim-anh-ai-rainbow-house-v7";
 const APP_SHELL = [
   "/",
   "/index.html",
