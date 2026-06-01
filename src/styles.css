@@ -162,6 +162,7 @@ button {
 }
 
 .today-card,
+.routine-card,
 .star-card,
 .memory-preview-card,
 .companion-card {
@@ -216,6 +217,30 @@ button {
 .today-card {
   grid-column: 1 / -1;
   background: #fff1c7;
+}
+
+.routine-card {
+  grid-column: 1 / -1;
+  background: #d8eef8;
+}
+
+.routine-lines {
+  display: grid;
+  gap: 8px;
+}
+
+.routine-lines p {
+  display: grid;
+  gap: 3px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.routine-lines span {
+  color: #5f6f78;
+  font-size: 0.9rem;
+  font-weight: 900;
 }
 
 .star-card {
@@ -552,6 +577,23 @@ p {
   color: #70594c;
 }
 
+.sleep-stage {
+  margin-top: 5vh;
+}
+
+.sleep-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.secondary-action {
+  color: #5f4f45;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 12px 24px rgba(93, 68, 50, 0.12);
+}
+
 .parent-shell {
   min-height: 100vh;
   min-height: 100dvh;
@@ -698,6 +740,22 @@ p {
 
 .content-counts strong {
   font-size: 1.2rem;
+}
+
+.routine-summary {
+  display: grid;
+  gap: 8px;
+}
+
+.routine-summary span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: #fff;
+  font-weight: 850;
 }
 
 .save-button {

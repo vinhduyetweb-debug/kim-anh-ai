@@ -2,7 +2,7 @@ import "./styles.css";
 import { getEncouragement, getGreeting, getSuggestion } from "./companionEngine.js";
 import { getMusic, getStories, getVideos, getVoices } from "./contentRegistry.js";
 import { memoryBox, rooms } from "./data/rooms.js";
-import { getRoutineStatus } from "./services/routine.js";
+import { getCurrentRoutine, getRoutineMessage } from "./routineEngine.js";
 import { loadParentSettings, saveParentSettings } from "./services/storage.js";
 import { addMemory, getMemories, removeMemory } from "./stores/memoryStore.js";
 import { getProfile, saveProfile } from "./stores/profileStore.js";
@@ -58,10 +58,8 @@ function renderHome() {
     encouragement: getEncouragement(),
     suggestion: getSuggestion()
   };
-  const routineStatus = getRoutineStatus(new Date(), {
-    wakeUp: profile.wakeUp,
-    sleep: profile.sleep
-  });
+  const routine = getCurrentRoutine();
+  const routineMessage = getRoutineMessage();
 
   app.innerHTML = `
     <main class="app-shell child-mode">
@@ -74,7 +72,7 @@ function renderHome() {
           <span class="character-name">Kim Anh</span>
         </button>
         <div class="hero-copy">
-          <p class="routine-pill">${routineStatus.isSleepTime ? "Đến giờ nghỉ ngơi dịu dàng" : "Một ngày vui đang chờ"}</p>
+          <p class="routine-pill">${escapeHtml(routineMessage)}</p>
           <h1 id="welcome-title">Xin chào ${escapeHtml(profile.name)} ✨</h1>
           <p>Hôm nay mình muốn làm gì nào?</p>
         </div>
@@ -100,6 +98,15 @@ function renderHome() {
           <div class="day-times" aria-label="Giờ sinh hoạt hôm nay">
             <span>Dậy lúc ${profile.wakeUp}</span>
             <span>Đi ngủ lúc ${profile.sleep}</span>
+          </div>
+        </article>
+
+        <article class="routine-card">
+          <p class="card-kicker">🕰️ Sinh Hoạt</p>
+          <h2>${escapeHtml(routineMessage)}</h2>
+          <div class="routine-lines">
+            <p><span>☀️ Buổi sáng</span> Chào buổi sáng ${escapeHtml(routine.childName)} ✨</p>
+            <p><span>🌙 Buổi tối</span> Mình chuẩn bị đi ngủ nha ✨</p>
           </div>
         </article>
 
@@ -195,6 +202,11 @@ function renderRoomPage(room) {
     return;
   }
 
+  if (room.id === "sleep") {
+    renderSleepRoom(room);
+    return;
+  }
+
   const isLaunch = room.kind === "launch";
 
   app.innerHTML = `
@@ -223,6 +235,29 @@ function renderRoomPage(room) {
   if (launchButton) {
     launchButton.addEventListener("click", () => launchModule(room));
   }
+}
+
+function renderSleepRoom(room) {
+  const profile = getProfile();
+
+  app.innerHTML = `
+    <main class="app-shell room-page ${room.color}">
+      <button class="back-button" type="button" data-back>← Về nhà</button>
+      <section class="room-stage sleep-stage">
+        <div class="room-symbol" aria-hidden="true">${room.emoji}</div>
+        <p class="card-kicker">Đám Mây Ngủ Ngoan</p>
+        <h1>${escapeHtml(profile.name)} ơi, mình nghỉ ngơi nha ✨</h1>
+        <p>Giờ đi ngủ của con là ${escapeHtml(profile.sleep)}.</p>
+        <p class="gentle-note">Kim Anh chúc con ngủ thật ngon, mơ những giấc mơ dịu dàng.</p>
+        <div class="sleep-actions">
+          <button class="primary-action" type="button">Bật nhạc nhẹ</button>
+          <button class="primary-action secondary-action" type="button">Nghe lời chúc của mẹ</button>
+        </div>
+      </section>
+    </main>
+  `;
+
+  app.querySelector("[data-back]").addEventListener("click", () => navigate("/"));
 }
 
 function renderContentPage(type) {
@@ -431,6 +466,10 @@ function renderParentMode() {
         <section class="parent-card">
           <h2>Schedule Settings</h2>
           <p class="parent-note">Giờ thức dậy và giờ ngủ được lấy từ Child Profile.</p>
+          <div class="routine-summary">
+            <span>☀️ Wake Up <strong>${profile.wakeUp}</strong></span>
+            <span>🌙 Sleep <strong>${profile.sleep}</strong></span>
+          </div>
         </section>
 
         <button class="save-button" type="submit">Lưu cài đặt</button>
