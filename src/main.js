@@ -1,4 +1,5 @@
 import "./styles.css";
+import { getEncouragement, getGreeting, getSuggestion } from "./companionEngine.js";
 import { getMusic, getStories, getVideos, getVoices } from "./contentRegistry.js";
 import { memoryBox, rooms } from "./data/rooms.js";
 import { getRoutineStatus } from "./services/routine.js";
@@ -51,6 +52,11 @@ function renderHome() {
   const profile = getProfile();
   const memories = getMemories();
   const totalStars = getTotalStars();
+  const companion = {
+    greeting: getGreeting(),
+    encouragement: getEncouragement(),
+    suggestion: getSuggestion()
+  };
   const routineStatus = getRoutineStatus(new Date(), {
     wakeUp: profile.wakeUp,
     sleep: profile.sleep
@@ -74,6 +80,14 @@ function renderHome() {
       </section>
 
       <section class="home-core" aria-label="Hôm nay và thành tích">
+        <article class="companion-card">
+          <p class="card-kicker">🐱 Kim Anh</p>
+          <h2>${escapeHtml(companion.greeting)}</h2>
+          <p>${escapeHtml(companion.encouragement.rewardStatus)}</p>
+          <p>${escapeHtml(companion.encouragement.memoryStatus)}</p>
+          <strong>${escapeHtml(companion.suggestion)}</strong>
+        </article>
+
         <article class="today-card">
           <p class="card-kicker">☀️ Hôm Nay</p>
           <h2>Xin chào ${escapeHtml(profile.name)} ✨</h2>
@@ -208,6 +222,7 @@ function renderContentPage(type) {
           <p class="card-kicker">${config.kicker}</p>
           <h1>${config.title}</h1>
           <p>${config.description}</p>
+          ${config.presenceMessage ? `<p class="presence-message">${config.presenceMessage}</p>` : ""}
         </div>
       </section>
 
@@ -255,6 +270,7 @@ function getContentConfig(type) {
       title: "Rạp Chiếu Phim",
       description: "Video vui do gia đình lựa chọn.",
       placeholder: "Mẫu hiển thị, chưa có file video.",
+      presenceMessage: "🐱 Xem vui nha ✨",
       color: "rose",
       items: getVideos,
       launchPath: "/apps/vinh-xemvideo/index.html"
@@ -266,6 +282,7 @@ function getContentConfig(type) {
       title: "Góc Cổ Tích",
       description: "Truyện và câu chuyện trước khi ngủ.",
       placeholder: "Playback truyện sẽ được thêm sau.",
+      presenceMessage: "🐱 Mình cùng nghe chuyện nha ✨",
       color: "sky",
       items: getStories
     },

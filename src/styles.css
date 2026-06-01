@@ -163,7 +163,8 @@ button {
 
 .today-card,
 .star-card,
-.memory-preview-card {
+.memory-preview-card,
+.companion-card {
   display: grid;
   gap: 10px;
   padding: 18px;
@@ -171,6 +172,21 @@ button {
   border-radius: 24px;
   background: rgba(255, 255, 255, 0.64);
   box-shadow: 0 12px 26px rgba(93, 68, 50, 0.1);
+}
+
+.companion-card {
+  grid-column: 1 / -1;
+  background: #ffe0ec;
+}
+
+.companion-card strong {
+  display: inline-block;
+  width: fit-content;
+  padding: 9px 13px;
+  border-radius: 999px;
+  color: #fffdf8;
+  background: #c87592;
+  font-size: 0.98rem;
 }
 
 .today-card {
@@ -250,6 +266,17 @@ button {
   font-size: 1.05rem;
   font-weight: 750;
   line-height: 1.35;
+}
+
+.presence-message {
+  display: inline-block;
+  width: fit-content;
+  margin-top: 10px;
+  padding: 9px 13px;
+  border-radius: 999px;
+  color: #5d463d;
+  background: rgba(255, 255, 255, 0.72);
+  font-weight: 900;
 }
 
 .content-list {

@@ -21,3 +21,20 @@
 .kimanh-home-link:active {
   transform: translateY(1px);
 }
+
+.kimanh-presence-banner {
+  position: sticky;
+  top: max(10px, env(safe-area-inset-top));
+  z-index: 99998;
+  width: fit-content;
+  max-width: calc(100% - 24px);
+  margin: 10px auto;
+  padding: 10px 14px;
+  border: 2px solid rgba(255, 255, 255, 0.82);
+  border-radius: 999px;
+  color: #4d3c34;
+  background: rgba(255, 247, 232, 0.95);
+  box-shadow: 0 10px 24px rgba(74, 48, 34, 0.16);
+  font: 850 15px/1.2 "Segoe UI", system-ui, -apple-system, sans-serif;
+  text-align: center;
+}
