@@ -29,7 +29,10 @@ export function addMemory(memory) {
     title: String(memory?.title || "").trim() || "Kỷ niệm mới",
     createdAt: memory?.createdAt || new Date().toISOString(),
     rewardStars: Math.max(0, Number(memory?.rewardStars) || 0),
-    rewardMessage: String(memory?.rewardMessage || "").trim()
+    rewardMessage: String(memory?.rewardMessage || "").trim(),
+    thumbnail: String(memory?.thumbnail || "").trim(),
+    payloadRef: String(memory?.payloadRef || "").trim(),
+    payloadType: String(memory?.payloadType || "").trim()
   };
 
   saveMemories([nextMemory, ...memories]);
@@ -81,7 +84,10 @@ function normalizeMemory(memory) {
     title: String(memory?.title || "Kỷ niệm").trim(),
     createdAt: memory?.createdAt || new Date().toISOString(),
     rewardStars: Math.max(0, Number(memory?.rewardStars) || 0),
-    rewardMessage: String(memory?.rewardMessage || "").trim()
+    rewardMessage: String(memory?.rewardMessage || "").trim(),
+    thumbnail: String(memory?.thumbnail || "").trim(),
+    payloadRef: String(memory?.payloadRef || "").trim(),
+    payloadType: String(memory?.payloadType || "").trim()
   };
 }
 

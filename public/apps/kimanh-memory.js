@@ -2,24 +2,30 @@
   const MEMORY_KEY = "kimAnhMemories";
   const REWARD_KEY = "kimAnhRewards";
   const DEDUPE_KEY = "kimAnhMemoryEvents";
+  const VAULT_DB = "kimAnhOfflineVault";
+  const VAULT_STORE = "memoryPayloads";
   const MEMORY_TOAST_TEXT = "✨ Đã thêm vào Kho Báu Ký Ức";
   const REWARD_TOAST_TEXT = "✨ Đã lưu vào Kho Báu Ký Ức và nhận 1 sao!";
 
   function recordMemory(type, title, options = {}) {
     const eventKey = options.eventKey || `${type}:${title}`;
 
-    if (isDuplicate(eventKey, options.windowMs || 12 * 60 * 60 * 1000)) {
+    if (isDuplicate(eventKey, options.windowMs || 24 * 60 * 60 * 1000)) {
       return null;
     }
 
     const reward = options.reward === false ? null : addReward(type);
+    const memoryId = options.id || (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`);
     const memory = {
-      id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
+      id: memoryId,
       type,
       title,
       createdAt: new Date().toISOString(),
       rewardStars: reward ? 1 : 0,
-      rewardMessage: reward?.message || ""
+      rewardMessage: reward?.message || "",
+      thumbnail: options.thumbnail || "",
+      payloadRef: options.payloadRef || "",
+      payloadType: options.payloadType || ""
     };
     const memories = readJson(MEMORY_KEY, []);
     localStorage.setItem(MEMORY_KEY, JSON.stringify(sortNewestFirst([memory, ...memories])));
@@ -31,6 +37,26 @@
 
   function recordDrawingMemory(title = "Bức tranh mới của Mỹ Anh", options) {
     return recordMemory("drawing", title, options);
+  }
+
+  async function recordDrawingImageMemory(title = "Bức tranh mới của Mỹ Anh", imageData, thumbnail) {
+    const memoryId = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
+    const memory = recordMemory("drawing", title, {
+      id: memoryId,
+      thumbnail: thumbnail || imageData,
+      payloadRef: memoryId,
+      payloadType: "image",
+      eventKey: `paint:drawing:${new Date().toDateString()}`
+    });
+
+    if (memory && imageData) {
+      await saveMemoryPayload(memoryId, {
+        type: "image",
+        data: imageData
+      });
+    }
+
+    return memory;
   }
 
   function recordLearningMemory(title = "Hôm nay Mỹ Anh học chữ A", options) {
@@ -120,9 +146,44 @@
     setTimeout(() => toast.remove(), 2200);
   }
 
+  function openVault() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(VAULT_DB, 1);
+
+      request.onupgradeneeded = () => {
+        const db = request.result;
+
+        if (!db.objectStoreNames.contains(VAULT_STORE)) {
+          db.createObjectStore(VAULT_STORE, { keyPath: "memoryId" });
+        }
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  async function saveMemoryPayload(memoryId, payload) {
+    const db = await openVault();
+    const tx = db.transaction(VAULT_STORE, "readwrite");
+    const store = tx.objectStore(VAULT_STORE);
+
+    await new Promise((resolve, reject) => {
+      const request = store.put({
+        memoryId,
+        payload,
+        savedAt: new Date().toISOString()
+      });
+
+      request.onsuccess = resolve;
+      request.onerror = () => reject(request.error);
+    });
+    db.close();
+  }
+
   window.KimAnhMemory = {
     recordMemory,
     recordDrawingMemory,
+    recordDrawingImageMemory,
     recordLearningMemory,
     recordVideoMemory,
     recordVoiceMemory,

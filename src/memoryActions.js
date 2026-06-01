@@ -1,5 +1,6 @@
 import { addMemory } from "./stores/memoryStore.js";
 import { rewardDrawing, rewardLearning, rewardMusic, rewardStory, rewardVideo, rewardVoice } from "./rewardActions.js";
+import { saveMemoryPayload } from "./storage/offlineVault.js";
 
 const ACTION_DEDUPE_KEY = "kimAnhMemoryRewardEvents";
 
@@ -27,6 +28,27 @@ export function recordMusicMemory(title = "Mỹ Anh nghe một bài nhạc") {
   return recordRewardedMemory("music", title, rewardMusic);
 }
 
+export async function recordDrawingImageMemory(title = "Bức tranh mới của Mỹ Anh", imageData, thumbnail = imageData) {
+  const memoryId = crypto.randomUUID();
+  const result = recordRewardedMemory("drawing", title, rewardDrawing, {
+    memoryData: {
+      id: memoryId,
+      thumbnail,
+      payloadRef: memoryId,
+      payloadType: "image"
+    }
+  });
+
+  if (result?.memory && imageData) {
+    await saveMemoryPayload(memoryId, {
+      type: "image",
+      data: imageData
+    });
+  }
+
+  return result;
+}
+
 function recordRewardedMemory(type, title, rewardAction, options = {}) {
   const eventKey = options.eventKey || `${type}:${title}:${new Date().toDateString()}`;
 
@@ -39,7 +61,8 @@ function recordRewardedMemory(type, title, rewardAction, options = {}) {
     type,
     title,
     rewardStars: 1,
-    rewardMessage: reward.message
+    rewardMessage: reward.message,
+    ...(options.memoryData || {})
   });
 
   rememberEvent(eventKey);

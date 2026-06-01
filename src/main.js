@@ -5,6 +5,8 @@ import { getMusic, getStories, getVideos, getVoices } from "./contentRegistry.js
 import { memoryBox, rooms } from "./data/rooms.js";
 import { recordDrawingMemory, recordLearningMemory, recordVideoMemory, recordVoiceMemory } from "./memoryActions.js";
 import { getCurrentRoutine, getRoutineMessage } from "./routineEngine.js";
+import { downloadBackup, getBackupStorageWarning, restoreBackupFile } from "./storage/backupService.js";
+import { getMemoryPayload } from "./storage/offlineVault.js";
 import { loadParentSettings, saveParentSettings } from "./services/storage.js";
 import { addMemory, getMemories, removeMemory } from "./stores/memoryStore.js";
 import { getProfile, saveProfile } from "./stores/profileStore.js";
@@ -291,6 +293,19 @@ function renderMemoryBoxPage(showCreatedToast = false) {
         </div>
       </section>
 
+      <section class="memory-backup-card" aria-label="Sao lưu và khôi phục">
+        <h2>🛟 Sao lưu dữ liệu</h2>
+        <p>${getBackupStorageWarning()}</p>
+        <div class="memory-backup-actions">
+          <button class="small-action" type="button" data-backup>Sao lưu dữ liệu</button>
+          <label class="small-action restore-label">
+            Khôi phục dữ liệu
+            <input type="file" accept="application/json,.json" data-restore hidden />
+          </label>
+        </div>
+        <p class="backup-status" data-backup-status aria-live="polite"></p>
+      </section>
+
       <section class="memory-list-section" aria-label="Danh sách ký ức">
         ${
           memories.length
@@ -307,6 +322,7 @@ function renderMemoryBoxPage(showCreatedToast = false) {
   app.querySelector("[data-open-memory-module]").addEventListener("click", () => {
     window.location.href = memoryBox.launchPath;
   });
+  bindBackupControls(() => renderMemoryBoxPage());
   app.querySelector("[data-memory-form]").addEventListener("submit", (event) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
@@ -326,6 +342,9 @@ function renderMemoryBoxPage(showCreatedToast = false) {
         renderMemoryBoxPage("reward");
       }
     });
+  });
+  app.querySelectorAll("[data-memory-view]").forEach((button) => {
+    button.addEventListener("click", () => showMemoryViewer(memories.find((memory) => memory.id === button.dataset.memoryView)));
   });
 
   if (showCreatedToast) {
@@ -555,6 +574,19 @@ function renderParentMode() {
           </button>
         </section>
 
+        <section class="parent-card backup-card">
+          <h2>Backup / Restore</h2>
+          <p class="parent-note">${getBackupStorageWarning()}</p>
+          <div class="inline-actions">
+            <button class="small-action" type="button" data-backup>Sao lưu dữ liệu</button>
+            <label class="small-action restore-label">
+              Khôi phục dữ liệu
+              <input type="file" accept="application/json,.json" data-restore hidden />
+            </label>
+          </div>
+          <p class="parent-note" data-backup-status aria-live="polite"></p>
+        </section>
+
         <button class="save-button" type="submit">Lưu cài đặt</button>
       </form>
     </main>
@@ -562,6 +594,7 @@ function renderParentMode() {
 
   app.querySelector("[data-back]").addEventListener("click", () => navigate("/"));
   bindInstallControls();
+  bindBackupControls(() => renderParentMode());
   app.querySelector("[data-add-star]").addEventListener("click", () => {
     addStar();
     renderParentMode();
@@ -702,14 +735,15 @@ function memoryListItem(memory) {
 
 function memoryTimelineItem(memory) {
   return `
-    <article class="memory-timeline-item">
+    <button class="memory-timeline-item" type="button" data-memory-view="${escapeHtml(memory.id)}">
       <span class="memory-type-icon" aria-hidden="true">${memoryIcon(memory.type)}</span>
+      ${memory.thumbnail ? `<img class="memory-thumbnail" src="${escapeHtml(memory.thumbnail)}" alt="" />` : ""}
       <div>
         <h2>${escapeHtml(memory.title)}</h2>
         <p>${escapeHtml(formatMemoryDate(memory.createdAt))}</p>
         ${memory.rewardStars ? `<span class="memory-reward-badge">⭐ +${memory.rewardStars}</span>` : ""}
       </div>
-    </article>
+    </button>
   `;
 }
 
@@ -813,6 +847,54 @@ function showMemoryToast(hasReward = false) {
   setTimeout(() => toast.remove(), 2200);
 }
 
+async function showMemoryViewer(memory) {
+  if (!memory) {
+    return;
+  }
+
+  const payload = memory.payloadRef ? await getMemoryPayload(memory.payloadRef) : null;
+  const body = memoryViewerBody(memory, payload);
+  const viewer = document.createElement("div");
+  viewer.className = "memory-viewer";
+  viewer.innerHTML = `
+    <div class="memory-viewer-card" role="dialog" aria-modal="true" aria-label="${escapeHtml(memory.title)}">
+      <button class="icon-close" type="button" data-close-memory>×</button>
+      <h2>${memoryIcon(memory.type)} ${escapeHtml(memory.title)}</h2>
+      ${body}
+    </div>
+  `;
+
+  document.body.appendChild(viewer);
+  viewer.querySelector("[data-close-memory]").addEventListener("click", () => viewer.remove());
+  viewer.querySelector("[data-open-video-module]")?.addEventListener("click", () => {
+    window.location.href = "/apps/vinh-xemvideo/index.html";
+  });
+  viewer.addEventListener("click", (event) => {
+    if (event.target === viewer) {
+      viewer.remove();
+    }
+  });
+}
+
+function memoryViewerBody(memory, payload) {
+  if (memory.payloadType === "image" && payload?.data) {
+    return `<img class="memory-full-image" src="${escapeHtml(payload.data)}" alt="${escapeHtml(memory.title)}" />`;
+  }
+
+  if (memory.payloadType === "video-ref" || memory.type === "video") {
+    return `
+      <p class="memory-viewer-note">${escapeHtml(memory.payloadRef || memory.title)}</p>
+      <button class="primary-action" type="button" data-open-video-module>Mở Rạp Chiếu Phim</button>
+    `;
+  }
+
+  if (memory.payloadType === "audio" || memory.type === "voice") {
+    return `<p class="memory-viewer-note">Phát lại giọng nói sẽ được thêm sau ✨</p>`;
+  }
+
+  return `<p class="memory-viewer-note">Ký ức này chưa có hình ảnh, nhưng Kim Anh vẫn nhớ nè ✨</p>`;
+}
+
 function recordQuickMemory(type) {
   const actions = {
     drawing: recordDrawingMemory,
@@ -822,6 +904,46 @@ function recordQuickMemory(type) {
   };
 
   return actions[type]?.();
+}
+
+function bindBackupControls(onRestored) {
+  const backupButton = app.querySelector("[data-backup]");
+  const restoreInput = app.querySelector("[data-restore]");
+  const status = app.querySelector("[data-backup-status]");
+
+  if (backupButton) {
+    backupButton.addEventListener("click", async () => {
+      status.textContent = "Đang chuẩn bị file sao lưu...";
+      await downloadBackup();
+      status.textContent = "Đã tạo file sao lưu ✨";
+    });
+  }
+
+  if (restoreInput) {
+    restoreInput.addEventListener("change", async (event) => {
+      const file = event.target.files?.[0];
+
+      if (!file) {
+        return;
+      }
+
+      if (!window.confirm("Khôi phục sẽ ghi đè dữ liệu hiện tại trên thiết bị này. Tiếp tục?")) {
+        restoreInput.value = "";
+        return;
+      }
+
+      try {
+        status.textContent = "Đang khôi phục dữ liệu...";
+        await restoreBackupFile(file);
+        status.textContent = "Đã khôi phục dữ liệu ✨";
+        onRestored();
+      } catch {
+        status.textContent = "File sao lưu chưa đúng. Mình thử lại nha ✨";
+      } finally {
+        restoreInput.value = "";
+      }
+    });
+  }
 }
 
 function getVietnameseDayName(date) {
