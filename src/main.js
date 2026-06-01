@@ -1,7 +1,11 @@
 import "./styles.css";
+import { getMusic, getStories, getVideos, getVoices } from "./contentRegistry.js";
 import { memoryBox, rooms } from "./data/rooms.js";
 import { getRoutineStatus } from "./services/routine.js";
 import { loadParentSettings, saveParentSettings } from "./services/storage.js";
+import { addMemory, getMemories, removeMemory } from "./stores/memoryStore.js";
+import { getProfile, saveProfile } from "./stores/profileStore.js";
+import { addStar, getTotalStars, removeStar } from "./stores/rewardStore.js";
 
 const app = document.querySelector("#app");
 let parentTapCount = 0;
@@ -28,6 +32,11 @@ function render() {
     return;
   }
 
+  if (route.startsWith("/content/")) {
+    renderContentPage(route.split("/").pop());
+    return;
+  }
+
   if (route.startsWith("/room/")) {
     const roomId = route.split("/").pop();
     const room = rooms.find((item) => item.id === roomId);
@@ -39,8 +48,13 @@ function render() {
 }
 
 function renderHome() {
-  const settings = loadParentSettings();
-  const routineStatus = getRoutineStatus(new Date(), settings.routine);
+  const profile = getProfile();
+  const memories = getMemories();
+  const totalStars = getTotalStars();
+  const routineStatus = getRoutineStatus(new Date(), {
+    wakeUp: profile.wakeUp,
+    sleep: profile.sleep
+  });
 
   app.innerHTML = `
     <main class="app-shell child-mode">
@@ -54,9 +68,35 @@ function renderHome() {
         </button>
         <div class="hero-copy">
           <p class="routine-pill">${routineStatus.isSleepTime ? "Đến giờ nghỉ ngơi dịu dàng" : "Một ngày vui đang chờ"}</p>
-          <h1 id="welcome-title">Xin chào Mỹ Anh ✨</h1>
+          <h1 id="welcome-title">Xin chào ${escapeHtml(profile.name)} ✨</h1>
           <p>Hôm nay mình muốn làm gì nào?</p>
         </div>
+      </section>
+
+      <section class="home-core" aria-label="Hôm nay và thành tích">
+        <article class="today-card">
+          <p class="card-kicker">☀️ Hôm Nay</p>
+          <h2>Xin chào ${escapeHtml(profile.name)} ✨</h2>
+          <p>Hôm nay là ${getVietnameseDayName(new Date())}.</p>
+          <div class="day-times" aria-label="Giờ sinh hoạt hôm nay">
+            <span>Dậy lúc ${profile.wakeUp}</span>
+            <span>Đi ngủ lúc ${profile.sleep}</span>
+          </div>
+        </article>
+
+        <article class="star-card">
+          <p class="card-kicker">⭐ Thành Tích</p>
+          <h2>${totalStars} sao</h2>
+          <p>Những cố gắng nhỏ mỗi ngày.</p>
+        </article>
+
+        <article class="memory-preview-card">
+          <p class="card-kicker">📦 Kho Báu Ký Ức</p>
+          <h2>Kỷ niệm mới nhất</h2>
+          <ul>
+            ${memories.slice(0, 3).map(memoryListItem).join("")}
+          </ul>
+        </article>
       </section>
 
       <section class="rooms-grid" aria-label="Các căn phòng trong Ngôi Nhà Cầu Vồng">
@@ -71,13 +111,15 @@ function renderHome() {
 
   app.querySelector(".kim-anh").addEventListener("click", handleHiddenParentEntry);
   app.querySelectorAll("[data-room]").forEach((button) => {
-    button.addEventListener("click", () => navigate(button.dataset.room));
+    button.addEventListener("click", () => openRoom(button.dataset.room));
   });
 }
 
 function roomCard(room, wide = false) {
+  const target = room.contentType ? `/content/${room.contentType}` : room.launchPath || (room.id === "memory" ? "/memory" : `/room/${room.id}`);
+
   return `
-    <button class="room-card ${room.color} ${wide ? "wide" : ""}" type="button" data-room="${room.id === "memory" ? "/memory" : `/room/${room.id}`}">
+    <button class="room-card ${room.color} ${wide ? "wide" : ""}" type="button" data-room="${target}">
       <span class="room-emoji" aria-hidden="true">${room.emoji}</span>
       <span class="room-text">
         <strong>${room.name}</strong>
@@ -85,6 +127,15 @@ function roomCard(room, wide = false) {
       </span>
     </button>
   `;
+}
+
+function openRoom(target) {
+  if (target.endsWith(".html")) {
+    window.location.href = target;
+    return;
+  }
+
+  navigate(target);
 }
 
 function handleHiddenParentEntry() {
@@ -138,6 +189,111 @@ function renderRoomPage(room) {
   }
 }
 
+function renderContentPage(type) {
+  const config = getContentConfig(type);
+
+  if (!config) {
+    navigate("/");
+    return;
+  }
+
+  const items = config.items();
+
+  app.innerHTML = `
+    <main class="app-shell content-page ${config.color}">
+      <button class="back-button" type="button" data-back>← Về nhà</button>
+      <section class="content-hero">
+        <div class="room-symbol" aria-hidden="true">${config.emoji}</div>
+        <div>
+          <p class="card-kicker">${config.kicker}</p>
+          <h1>${config.title}</h1>
+          <p>${config.description}</p>
+        </div>
+      </section>
+
+      <section class="content-list" aria-label="${config.title}">
+        ${items.map((item) => contentItemCard(item, config)).join("")}
+      </section>
+
+      ${
+        config.launchPath
+          ? `<button class="primary-action content-launch" type="button" data-launch-module="${config.launchPath}">Mở Vinh-XemVideo</button>`
+          : ""
+      }
+    </main>
+  `;
+
+  app.querySelector("[data-back]").addEventListener("click", () => navigate("/"));
+  const launchButton = app.querySelector("[data-launch-module]");
+
+  if (launchButton) {
+    launchButton.addEventListener("click", () => {
+      window.location.href = launchButton.dataset.launchModule;
+    });
+  }
+}
+
+function contentItemCard(item, config) {
+  return `
+    <article class="content-item">
+      <span class="content-item-icon" aria-hidden="true">${config.itemEmoji}</span>
+      <div>
+        <h2>${escapeHtml(item.title)}</h2>
+        <p>${escapeHtml(item.description || config.placeholder)}</p>
+        <small>${item.src ? "Sẵn sàng phát" : config.placeholder}</small>
+      </div>
+    </article>
+  `;
+}
+
+function getContentConfig(type) {
+  const configs = {
+    video: {
+      emoji: "🎬",
+      itemEmoji: "▶️",
+      kicker: "Video Vui",
+      title: "Rạp Chiếu Phim",
+      description: "Video vui do gia đình lựa chọn.",
+      placeholder: "Mẫu hiển thị, chưa có file video.",
+      color: "rose",
+      items: getVideos,
+      launchPath: "/apps/vinh-xemvideo/index.html"
+    },
+    story: {
+      emoji: "📖",
+      itemEmoji: "📘",
+      kicker: "Story Library",
+      title: "Góc Cổ Tích",
+      description: "Truyện và câu chuyện trước khi ngủ.",
+      placeholder: "Playback truyện sẽ được thêm sau.",
+      color: "sky",
+      items: getStories
+    },
+    music: {
+      emoji: "🎵",
+      itemEmoji: "🎶",
+      kicker: "Music Library",
+      title: "Khu Vườn Âm Nhạc",
+      description: "Âm nhạc và giai điệu vui vẻ.",
+      placeholder: "Playback nhạc sẽ được thêm sau.",
+      color: "mint",
+      items: getMusic
+    },
+    voice: {
+      emoji: "👨",
+      itemEmoji: "🔊",
+      kicker: "Voice Library",
+      title: "Voice Messages",
+      description: "Giọng bố mẹ và lời nhắn yêu thương.",
+      placeholder: "Audio placeholder.",
+      color: "peach",
+      items: getVoices
+    }
+  };
+
+  return configs[type];
+}
+
 function launchModule(room) {
   if (!room.launchPath) {
     return;
@@ -148,6 +304,15 @@ function launchModule(room) {
 
 function renderParentMode() {
   const settings = loadParentSettings();
+  const profile = getProfile();
+  const memories = getMemories();
+  const totalStars = getTotalStars();
+  const contentCounts = {
+    videos: getVideos().length,
+    stories: getStories().length,
+    music: getMusic().length,
+    voices: getVoices().length
+  };
 
   app.innerHTML = `
     <main class="parent-shell">
@@ -160,20 +325,73 @@ function renderParentMode() {
       </header>
 
       <form class="parent-grid">
+        <section class="parent-card profile-card">
+          <h2>Child Profile</h2>
+          <label>
+            Name
+            <input name="name" type="text" value="${escapeHtml(profile.name)}" autocomplete="off" />
+          </label>
+          <label>
+            Age
+            <input name="age" type="number" min="1" max="12" value="${profile.age}" />
+          </label>
+          <label>
+            Wake Up
+            <input name="wakeUp" type="time" value="${profile.wakeUp}" />
+          </label>
+          <label>
+            Sleep
+            <input name="sleep" type="time" value="${profile.sleep}" />
+          </label>
+        </section>
+
+        <section class="parent-card reward-card">
+          <h2>Reward System</h2>
+          <p class="reward-total">⭐ ${totalStars} sao</p>
+          <div class="inline-actions">
+            <button class="small-action" type="button" data-add-star>+ Thêm sao</button>
+            <button class="small-action" type="button" data-remove-star>- Bớt sao</button>
+          </div>
+        </section>
+
+        <section class="parent-card memory-manager-card">
+          <h2>Memory Engine</h2>
+          <label>
+            Type
+            <select name="memoryType">
+              <option value="art">Art</option>
+              <option value="learning">Learning</option>
+              <option value="video">Video</option>
+              <option value="family">Family</option>
+            </select>
+          </label>
+          <label>
+            Title
+            <input name="memoryTitle" type="text" placeholder="Tên kỷ niệm" />
+          </label>
+          <button class="small-action" type="button" data-add-memory>Thêm kỷ niệm</button>
+          <div class="memory-admin-list">
+            ${memories.map(memoryAdminItem).join("")}
+          </div>
+        </section>
+
+        <section class="parent-card content-count-card">
+          <h2>Content Registry</h2>
+          <div class="content-counts">
+            <span>🎬 Videos <strong>${contentCounts.videos}</strong></span>
+            <span>📖 Stories <strong>${contentCounts.stories}</strong></span>
+            <span>🎵 Music <strong>${contentCounts.music}</strong></span>
+            <span>👨 Voices <strong>${contentCounts.voices}</strong></span>
+          </div>
+        </section>
+
         ${libraryField("Video Library", "videoLibrary", settings.videoLibrary)}
         ${libraryField("Story Library", "storyLibrary", settings.storyLibrary)}
         ${libraryField("Music Library", "musicLibrary", settings.musicLibrary)}
 
         <section class="parent-card">
           <h2>Schedule Settings</h2>
-          <label>
-            Wake Up
-            <input name="wakeUp" type="time" value="${settings.routine.wakeUp}" />
-          </label>
-          <label>
-            Sleep
-            <input name="sleep" type="time" value="${settings.routine.sleep}" />
-          </label>
+          <p class="parent-note">Giờ thức dậy và giờ ngủ được lấy từ Child Profile.</p>
         </section>
 
         <button class="save-button" type="submit">Lưu cài đặt</button>
@@ -182,20 +400,87 @@ function renderParentMode() {
   `;
 
   app.querySelector("[data-back]").addEventListener("click", () => navigate("/"));
+  app.querySelector("[data-add-star]").addEventListener("click", () => {
+    addStar();
+    renderParentMode();
+  });
+  app.querySelector("[data-remove-star]").addEventListener("click", () => {
+    removeStar();
+    renderParentMode();
+  });
+  app.querySelector("[data-add-memory]").addEventListener("click", () => {
+    const form = app.querySelector("form");
+    const data = new FormData(form);
+
+    addMemory({
+      type: data.get("memoryType"),
+      title: data.get("memoryTitle")
+    });
+    renderParentMode();
+  });
+  app.querySelectorAll("[data-remove-memory]").forEach((button) => {
+    button.addEventListener("click", () => {
+      removeMemory(button.dataset.removeMemory);
+      renderParentMode();
+    });
+  });
   app.querySelector("form").addEventListener("submit", (event) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
+    const nextProfile = saveProfile({
+      ...profile,
+      name: String(form.get("name")).trim() || profile.name,
+      age: form.get("age"),
+      wakeUp: form.get("wakeUp"),
+      sleep: form.get("sleep")
+    });
+
     saveParentSettings({
       videoLibrary: splitLines(form.get("videoLibrary")),
       storyLibrary: splitLines(form.get("storyLibrary")),
       musicLibrary: splitLines(form.get("musicLibrary")),
       routine: {
-        wakeUp: form.get("wakeUp"),
-        sleep: form.get("sleep")
+        wakeUp: nextProfile.wakeUp,
+        sleep: nextProfile.sleep
       }
     });
     navigate("/");
   });
+}
+
+function memoryListItem(memory) {
+  return `
+    <li>
+      <span>${memoryIcon(memory.type)}</span>
+      <strong>${escapeHtml(memory.title)}</strong>
+    </li>
+  `;
+}
+
+function memoryAdminItem(memory) {
+  return `
+    <div class="memory-admin-item">
+      <span>${memoryIcon(memory.type)}</span>
+      <strong>${escapeHtml(memory.title)}</strong>
+      <button type="button" data-remove-memory="${escapeHtml(memory.id)}">Xóa</button>
+    </div>
+  `;
+}
+
+function memoryIcon(type) {
+  const icons = {
+    art: "🎨",
+    family: "👨‍👩‍👧",
+    learning: "🔤",
+    video: "🎬"
+  };
+
+  return icons[type] || "📦";
+}
+
+function getVietnameseDayName(date) {
+  const days = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
+  return days[date.getDay()];
 }
 
 function libraryField(title, name, value) {
@@ -212,6 +497,15 @@ function splitLines(value) {
     .split("\n")
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 window.addEventListener("hashchange", render);

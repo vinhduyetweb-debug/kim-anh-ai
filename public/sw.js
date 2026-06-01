@@ -1,9 +1,11 @@
-const CACHE_NAME = "kim-anh-ai-rainbow-house-v2";
+const CACHE_NAME = "kim-anh-ai-rainbow-house-v4";
 const APP_SHELL = [
   "/",
   "/index.html",
   "/manifest.webmanifest",
   "/icons/icon.svg",
+  "/apps/kimanh-bridge.css",
+  "/apps/kimanh-bridge.js",
   "/apps/abcmyanh/",
   "/apps/abcmyanh/index.html",
   "/apps/abcmyanh/sw.js",
@@ -23,7 +25,13 @@ const APP_SHELL = [
   "/apps/vinh-xemvideo/app.js",
   "/apps/vinh-xemvideo/style.css",
   "/apps/vinh-xemvideo/manifest.json",
-  "/apps/vinh-xemvideo/sw.js"
+  "/apps/vinh-xemvideo/sw.js",
+  "/apps/vinh-khobaukyuc/",
+  "/apps/vinh-khobaukyuc/index.html",
+  "/apps/vinh-khobaukyuc/app.js",
+  "/apps/vinh-khobaukyuc/style.css",
+  "/apps/vinh-khobaukyuc/manifest.json",
+  "/apps/vinh-khobaukyuc/folder_map.json"
 ];
 
 self.addEventListener("install", (event) => {

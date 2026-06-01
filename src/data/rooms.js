@@ -5,8 +5,9 @@ export const rooms = [
     name: "Rạp Chiếu Phim",
     module: "Vinh-XemVideo",
     description: "Video vui do gia đình lựa chọn.",
-    kind: "launch",
-    launchPath: "/apps/vinh-xemvideo/",
+    kind: "content",
+    contentType: "video",
+    launchPath: "/apps/vinh-xemvideo/index.html",
     color: "rose"
   },
   {
@@ -16,7 +17,7 @@ export const rooms = [
     module: "Vinh Paint",
     description: "Vẽ tranh và sáng tạo.",
     kind: "launch",
-    launchPath: "/apps/vinh-paint/",
+    launchPath: "/apps/vinh-paint/index.html",
     color: "sun"
   },
   {
@@ -26,7 +27,7 @@ export const rooms = [
     module: "ABCMYANH",
     description: "Học chữ cái cùng Kim Anh.",
     kind: "launch",
-    launchPath: "/apps/abcmyanh/",
+    launchPath: "/apps/abcmyanh/index.html",
     color: "leaf"
   },
   {
@@ -35,7 +36,8 @@ export const rooms = [
     name: "Góc Cổ Tích",
     module: "Story Player",
     description: "Truyện và câu chuyện trước khi ngủ.",
-    kind: "placeholder",
+    kind: "content",
+    contentType: "story",
     color: "sky"
   },
   {
@@ -44,8 +46,19 @@ export const rooms = [
     name: "Khu Vườn Âm Nhạc",
     module: "Music Player",
     description: "Âm nhạc và giai điệu vui vẻ.",
-    kind: "placeholder",
+    kind: "content",
+    contentType: "music",
     color: "mint"
+  },
+  {
+    id: "voice",
+    emoji: "👨",
+    name: "Voice Messages",
+    module: "Voice Library",
+    description: "Giọng bố mẹ và lời nhắn yêu thương.",
+    kind: "content",
+    contentType: "voice",
+    color: "peach"
   },
   {
     id: "sleep",
@@ -62,8 +75,9 @@ export const memoryBox = {
   id: "memory",
   emoji: "📦",
   name: "Kho Báu Ký Ức",
-  module: "Memory Box",
-  description: "Nơi lưu giữ những kỷ niệm đẹp.",
-  kind: "placeholder",
+  module: "Vinh Kho Báu Ký Ức",
+  description: "Nơi lưu giữ tranh, video, âm thanh và kỷ niệm đẹp.",
+  kind: "launch",
+  launchPath: "/apps/vinh-khobaukyuc/index.html",
   color: "peach"
 };
