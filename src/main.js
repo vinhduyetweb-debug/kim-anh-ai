@@ -34,6 +34,11 @@ function render() {
     return;
   }
 
+  if (route === "/my-anh-corner") {
+    renderMyAnhCorner();
+    return;
+  }
+
   if (route.startsWith("/content/")) {
     renderContentPage(route.split("/").pop());
     return;
@@ -51,118 +56,67 @@ function render() {
 
 function renderHome() {
   const profile = getProfile();
-  const memories = getMemories();
-  const totalStars = getTotalStars();
   const companion = {
     greeting: getGreeting(),
     encouragement: getEncouragement(),
     suggestion: getSuggestion()
   };
-  const routine = getCurrentRoutine();
-  const routineMessage = getRoutineMessage();
+  const houseRooms = rooms.filter((room) => room.id !== "voice");
 
   app.innerHTML = `
-    <main class="app-shell child-mode">
-      <section class="hero" aria-labelledby="welcome-title">
+    <main class="app-shell child-mode rainbow-home">
+      <section class="hero rainbow-hero" aria-labelledby="welcome-title">
         <div class="rainbow" aria-hidden="true">
           <span></span><span></span><span></span>
         </div>
-        <button class="kim-anh" type="button" aria-label="Kim Anh">
-          <span class="cat-face" aria-hidden="true">🐱</span>
-          <span class="character-name">Kim Anh</span>
-        </button>
-        <div class="hero-copy">
-          <p class="routine-pill">${escapeHtml(routineMessage)}</p>
-          <h1 id="welcome-title">Xin chào ${escapeHtml(profile.name)} ✨</h1>
-          <p>Hôm nay mình muốn làm gì nào?</p>
-        </div>
-      </section>
-
-      <section class="home-core" aria-label="Hôm nay và thành tích">
-        <article class="companion-card">
-          <p class="card-kicker">🐱 Kim Anh</p>
-          <h2>${escapeHtml(companion.greeting)}</h2>
-          <p>${escapeHtml(companion.encouragement.rewardStatus)}</p>
-          <p>${escapeHtml(companion.encouragement.memoryStatus)}</p>
-          <strong>${escapeHtml(companion.suggestion)}</strong>
-          <div class="voice-control">
+        <div class="kim-hero-card">
+          <button class="kim-anh" type="button" aria-label="Kim Anh">
+            <span class="cat-face" aria-hidden="true">🐱</span>
+            <span class="character-name">Kim Anh</span>
+          </button>
+          <div class="hero-copy">
+            <p class="hero-kicker">🐱 Kim Anh</p>
+            <h1 id="welcome-title">Xin chào ${escapeHtml(profile.name)} ✨</h1>
+            <p>Hôm nay mình muốn chơi gì nào?</p>
+            <strong>${escapeHtml(companion.suggestion)}</strong>
+          </div>
+          <div class="voice-control home-voice">
             <button class="voice-button" type="button" data-voice-button>🎙️ Gọi Kim Anh</button>
             <p class="voice-status" data-voice-status aria-live="polite"></p>
           </div>
-        </article>
+        </div>
+      </section>
 
-        <article class="today-card">
-          <p class="card-kicker">☀️ Hôm Nay</p>
-          <h2>Xin chào ${escapeHtml(profile.name)} ✨</h2>
-          <p>Hôm nay là ${getVietnameseDayName(new Date())}.</p>
-          <div class="day-times" aria-label="Giờ sinh hoạt hôm nay">
-            <span>Dậy lúc ${profile.wakeUp}</span>
-            <span>Đi ngủ lúc ${profile.sleep}</span>
-          </div>
-        </article>
-
-        <article class="routine-card">
-          <p class="card-kicker">🕰️ Sinh Hoạt</p>
-          <h2>${escapeHtml(routineMessage)}</h2>
-          <div class="routine-lines">
-            <p><span>☀️ Buổi sáng</span> Chào buổi sáng ${escapeHtml(routine.childName)} ✨</p>
-            <p><span>🌙 Buổi tối</span> Mình chuẩn bị đi ngủ nha ✨</p>
-          </div>
-        </article>
-
-        <article class="star-card">
-          <p class="card-kicker">⭐ Thành Tích</p>
-          <h2>${totalStars} sao</h2>
-          <p>Những cố gắng nhỏ mỗi ngày.</p>
-        </article>
-
-        <article class="memory-preview-card">
-          <p class="card-kicker">📦 Kho Báu Ký Ức</p>
-          <h2>Kỷ niệm mới nhất</h2>
-          <ul>
-            ${memories.slice(0, 3).map(memoryListItem).join("")}
-          </ul>
-        </article>
+      <section class="house-title" aria-label="Ngôi Nhà Cầu Vồng">
+        <p>🌈</p>
+        <h2>Ngôi Nhà Cầu Vồng</h2>
       </section>
 
       <section class="rooms-grid" aria-label="Các căn phòng trong Ngôi Nhà Cầu Vồng">
-        ${rooms.map(roomCard).join("")}
+        ${houseRooms.map(roomCard).join("")}
       </section>
 
       <section class="memory-band" aria-label="Kho Báu Ký Ức">
-        ${roomCard(memoryBox, true)}
+        ${roomCard(memoryBox, true, "memory-feature")}
       </section>
+
+      <button class="my-anh-corner-button" type="button" data-my-anh-corner>🌟 Góc Của Mỹ Anh</button>
     </main>
   `;
 
   app.querySelector(".kim-anh").addEventListener("click", handleHiddenParentEntry);
-  const voiceStatus = app.querySelector("[data-voice-status]");
-  app.querySelector("[data-voice-button]").addEventListener("click", () => {
-    startListening({
-      onUnsupported: () => {
-        voiceStatus.textContent = "Máy này chưa hỗ trợ nghe giọng nói ✨";
-      },
-      onStart: () => {
-        voiceStatus.textContent = "Kim Anh đang nghe nè ✨";
-      },
-      onRecognized: () => {
-        voiceStatus.textContent = "Được nè, mình mở cho Mỹ Anh nha ✨";
-      },
-      onUnknown: () => {
-        voiceStatus.textContent = "Kim Anh chưa hiểu. Mỹ Anh thử nói lại nha ✨";
-      }
-    });
-  });
+  bindVoiceButton();
+  app.querySelector("[data-my-anh-corner]").addEventListener("click", () => navigate("/my-anh-corner"));
   app.querySelectorAll("[data-room]").forEach((button) => {
     button.addEventListener("click", () => openRoom(button.dataset.room));
   });
 }
 
-function roomCard(room, wide = false) {
+function roomCard(room, wide = false, extraClass = "") {
   const target = room.contentType ? `/content/${room.contentType}` : room.launchPath || (room.id === "memory" ? "/memory" : `/room/${room.id}`);
 
   return `
-    <button class="room-card ${room.color} ${wide ? "wide" : ""}" type="button" data-room="${target}">
+    <button class="room-card ${room.color} ${wide ? "wide" : ""} ${extraClass}" type="button" data-room="${target}">
       <span class="room-emoji" aria-hidden="true">${room.emoji}</span>
       <span class="room-text">
         <strong>${room.name}</strong>
@@ -523,6 +477,87 @@ function renderParentMode() {
       }
     });
     navigate("/");
+  });
+}
+
+function renderMyAnhCorner() {
+  const profile = getProfile();
+  const memories = getMemories();
+  const totalStars = getTotalStars();
+  const routine = getCurrentRoutine();
+  const routineMessage = getRoutineMessage();
+
+  app.innerHTML = `
+    <main class="app-shell my-anh-corner">
+      <button class="back-button" type="button" data-back>← Về nhà</button>
+      <section class="corner-hero">
+        <p class="card-kicker">🌟 Góc Của Mỹ Anh</p>
+        <h1>Những điều nhỏ xinh hôm nay</h1>
+      </section>
+
+      <section class="home-core corner-grid" aria-label="Hôm nay, sinh hoạt và kỷ niệm">
+        <article class="today-card">
+          <p class="card-kicker">☀️ Hôm Nay</p>
+          <h2>Xin chào ${escapeHtml(profile.name)} ✨</h2>
+          <p>Hôm nay là ${getVietnameseDayName(new Date())}.</p>
+          <div class="day-times" aria-label="Giờ sinh hoạt hôm nay">
+            <span>Dậy lúc ${profile.wakeUp}</span>
+            <span>Đi ngủ lúc ${profile.sleep}</span>
+          </div>
+        </article>
+
+        <article class="routine-card">
+          <p class="card-kicker">🕰️ Sinh Hoạt</p>
+          <h2>${escapeHtml(routineMessage)}</h2>
+          <div class="routine-lines">
+            <p><span>☀️ Buổi sáng</span> Chào buổi sáng ${escapeHtml(routine.childName)} ✨</p>
+            <p><span>🌙 Buổi tối</span> Mình chuẩn bị đi ngủ nha ✨</p>
+          </div>
+        </article>
+
+        <article class="star-card">
+          <p class="card-kicker">⭐ Thành Tích</p>
+          <h2>${totalStars} sao</h2>
+          <p>Những cố gắng nhỏ mỗi ngày.</p>
+        </article>
+
+        <article class="memory-preview-card">
+          <p class="card-kicker">📦 Kho Báu Ký Ức</p>
+          <h2>Kỷ niệm mới nhất</h2>
+          <ul>
+            ${memories.slice(0, 3).map(memoryListItem).join("")}
+          </ul>
+        </article>
+      </section>
+    </main>
+  `;
+
+  app.querySelector("[data-back]").addEventListener("click", () => navigate("/"));
+}
+
+function bindVoiceButton() {
+  const voiceButton = app.querySelector("[data-voice-button]");
+  const voiceStatus = app.querySelector("[data-voice-status]");
+
+  if (!voiceButton || !voiceStatus) {
+    return;
+  }
+
+  voiceButton.addEventListener("click", () => {
+    startListening({
+      onUnsupported: () => {
+        voiceStatus.textContent = "Máy này chưa hỗ trợ nghe giọng nói ✨";
+      },
+      onStart: () => {
+        voiceStatus.textContent = "Kim Anh đang nghe nè ✨";
+      },
+      onRecognized: () => {
+        voiceStatus.textContent = "Được nè, mình mở cho Mỹ Anh nha ✨";
+      },
+      onUnknown: () => {
+        voiceStatus.textContent = "Kim Anh chưa hiểu. Mỹ Anh thử nói lại nha ✨";
+      }
+    });
   });
 }
 
