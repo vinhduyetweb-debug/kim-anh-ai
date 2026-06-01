@@ -189,6 +189,30 @@ button {
   font-size: 0.98rem;
 }
 
+.voice-control {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+
+.voice-button {
+  min-height: 46px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 18px;
+  color: #fffdf8;
+  background: #8e6bb8;
+  box-shadow: 0 10px 22px rgba(92, 67, 127, 0.18);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.voice-status {
+  min-height: 1.4em;
+  color: #6b554a;
+  font-weight: 850;
+}
+
 .today-card {
   grid-column: 1 / -1;
   background: #fff1c7;

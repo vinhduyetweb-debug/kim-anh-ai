@@ -7,6 +7,7 @@ import { loadParentSettings, saveParentSettings } from "./services/storage.js";
 import { addMemory, getMemories, removeMemory } from "./stores/memoryStore.js";
 import { getProfile, saveProfile } from "./stores/profileStore.js";
 import { addStar, getTotalStars, removeStar } from "./stores/rewardStore.js";
+import { startListening } from "./voiceIntentEngine.js";
 
 const app = document.querySelector("#app");
 let parentTapCount = 0;
@@ -86,6 +87,10 @@ function renderHome() {
           <p>${escapeHtml(companion.encouragement.rewardStatus)}</p>
           <p>${escapeHtml(companion.encouragement.memoryStatus)}</p>
           <strong>${escapeHtml(companion.suggestion)}</strong>
+          <div class="voice-control">
+            <button class="voice-button" type="button" data-voice-button>🎙️ Gọi Kim Anh</button>
+            <p class="voice-status" data-voice-status aria-live="polite"></p>
+          </div>
         </article>
 
         <article class="today-card">
@@ -124,6 +129,23 @@ function renderHome() {
   `;
 
   app.querySelector(".kim-anh").addEventListener("click", handleHiddenParentEntry);
+  const voiceStatus = app.querySelector("[data-voice-status]");
+  app.querySelector("[data-voice-button]").addEventListener("click", () => {
+    startListening({
+      onUnsupported: () => {
+        voiceStatus.textContent = "Máy này chưa hỗ trợ nghe giọng nói ✨";
+      },
+      onStart: () => {
+        voiceStatus.textContent = "Kim Anh đang nghe nè ✨";
+      },
+      onRecognized: () => {
+        voiceStatus.textContent = "Được nè, mình mở cho Mỹ Anh nha ✨";
+      },
+      onUnknown: () => {
+        voiceStatus.textContent = "Kim Anh chưa hiểu. Mỹ Anh thử nói lại nha ✨";
+      }
+    });
+  });
   app.querySelectorAll("[data-room]").forEach((button) => {
     button.addEventListener("click", () => openRoom(button.dataset.room));
   });
